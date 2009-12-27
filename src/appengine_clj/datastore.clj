@@ -1,8 +1,19 @@
 (ns appengine-clj.datastore
   (:import (com.google.appengine.api.datastore
-            DatastoreServiceFactory Entity Key Query KeyFactory))
-  (:refer-clojure :exclude [get]))
+            DatastoreServiceFactory Entity Key Query KeyFactory
+            FetchOptions$Builder
+            Query$FilterOperator
+            Query$SortDirection))
+  (:refer-clojure :exclude [get = > >= < <=]))
 
+(def ASC Query$SortDirection/ASCENDING)
+(def DESC Query$SortDirection/DESCENDING)
+
+(def = Query$FilterOperator/EQUAL)
+(def > Query$FilterOperator/GREATER_THAN)
+(def >= Query$FilterOperator/GREATER_THAN_OR_EQUAL)
+(def < Query$FilterOperator/LESS_THAN)
+(def <= Query$FilterOperator/LESS_THAN_OR_EQUAL)
 
 (defn entity-to-map
   "Converts an instance of com.google.appengine.api.datastore.Entity
@@ -44,6 +55,17 @@
   (let [data-service (DatastoreServiceFactory/getDatastoreService)
         results (.asIterable (.prepare data-service query))]
     (map entity-to-map results)))
+
+(defn find-limit
+  [#^Query query offset limit]
+  (let [data-service (DatastoreServiceFactory/getDatastoreService)
+        results (.asIterable (.prepare data-service query)
+                             (.offset (FetchOptions$Builder/withLimit limit)
+                                      offset))]
+    (map entity-to-map results)))
+
+
+
 
 (defn create
   "Takes a map of keyword-value pairs and puts a new Entity in the Datastore.
